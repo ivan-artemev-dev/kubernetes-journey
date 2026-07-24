@@ -125,3 +125,95 @@ This is the fundamental difference. **Always use Deployments.**
 - [ ] Learn what Service is and create one
 - [ ] Expose the nginx deployment outside the cluster
 - [ ] Write first Dockerfile for parse_gdelt
+
+## Service — Stable Access to Pods
+
+### Why Service exists
+
+Pod names and IPs change every time a pod is recreated. You can never rely on a pod's IP directly. Service solves this — it gives a stable endpoint that always points to the right pods, regardless of how many times they've been recreated.
+
+### How Service finds Pods — Labels
+
+Service doesn't connect to pods by name. It uses **labels** — key/value tags on pods.
+
+In the Deployment manifest:
+```yaml
+labels:
+  app: nginx
+```
+
+In the Service manifest:
+```yaml
+selector:
+  app: nginx
+```
+
+Service finds all pods with matching label and routes traffic to them. This is why pod names can change freely — the label stays the same.
+
+### Service types
+
+| Type | When to use |
+|---|---|
+| `ClusterIP` | Default. Only accessible inside the cluster. Used for pod-to-pod communication (e.g. backend → elasticsearch) |
+| `NodePort` | Opens a port on the node. Accessible from outside the cluster. Used for development. |
+| `LoadBalancer` | Cloud only. Creates an external load balancer. Used in production. |
+
+### First Service manifest
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-first-service
+spec:
+  selector:
+    app: nginx        # finds pods with this label
+  type: NodePort
+  ports:
+  - port: 80          # port inside the cluster
+    targetPort: 80    # port on the container
+    nodePort: 30080   # port exposed on the node (outside)
+```
+
+### port-forward — developer tool
+
+`kubectl port-forward` is NOT part of Kubernetes configuration. It's a temporary tunnel for development and debugging. Requires terminal to stay open.
+
+```bash
+# Forward with access from all network interfaces
+kubectl port-forward service/my-first-service --address 0.0.0.0 8080:80
+```
+
+```
+Windows browser → 192.168.35.100:8080 → port-forward → Service → Pod → nginx
+```
+
+In production this is replaced by **Ingress** — a permanent solution that's part of the cluster config.
+
+### Key insight
+
+`port-forward` listens on `127.0.0.1` (localhost) by default. To make it accessible from another machine, always add `--address 0.0.0.0`.
+
+### Commands learned
+
+```bash
+# Apply service manifest
+kubectl apply -f my-first-service.yaml
+
+# Get minikube node IP
+minikube ip
+
+# Get service URL
+minikube service my-first-service --url
+
+# Port forward (temporary, for development)
+kubectl port-forward service/my-first-service --address 0.0.0.0 8080:80
+
+# List all services
+kubectl get services
+```
+
+## Next Steps
+- [ ] Learn Ingress — permanent external access solution
+- [ ] Write Dockerfile for parse_gdelt
+- [ ] Understand ClusterIP — how pods talk to each other inside the cluster
