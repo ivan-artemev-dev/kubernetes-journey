@@ -20,7 +20,7 @@ The goal is to go through every stage properly — understanding why, not just h
 | `gdelt-dashboard` frontend | React + Vite | Pages: Feed, Search, Entity, Trends, Map, Historical analysis |
 | Storage | Elasticsearch | Main index `gdelt_gkg`, SQLite for reference data |
 
-Currently running on a **single machine without containers**. The journey is to properly migrate this to Kubernetes.
+Currently running in **Kubernetes (minikube)** with all services containerized. The journey continues toward CI/CD and production practices.
 
 ## Learning Path
 
