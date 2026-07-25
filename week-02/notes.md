@@ -26,3 +26,20 @@
 
 ## Next Step
 Translate docker-compose into Kubernetes manifests
+
+Week 02 — Part 2: GDELT Dashboard
+
+What We Did
+
+We dockerized the GDELT Analytics Dashboard — a web interface that displays data collected by the parser. The dashboard consists of a FastAPI backend that queries Elasticsearch, and an nginx-served React frontend that proxies API requests to the backend. We wrote Dockerfiles for both services and added them to the existing docker-compose.yml alongside the pipeline and Elasticsearch.
+
+Key Concepts
+
+Multi-stage build (frontend)
+Node.js is only needed to build static files. In the final image it's not needed — only nginx and the dist/ folder remain. This reduces image size from ~1GB to ~50MB.
+
+depends_on
+Guarantees that a container is started, but not that the app inside is ready. Elasticsearch needs extra time to initialize after the container starts.
+
+Container networking
+Containers are isolated — they cannot reach localhost of the host machine. They communicate with each other by service name (e.g. elasticsearch, gdelt-backend). Docker resolves service names to IPs automatically within its internal network.
