@@ -43,3 +43,27 @@ Guarantees that a container is started, but not that the app inside is ready. El
 
 Container networking
 Containers are isolated — they cannot reach localhost of the host machine. They communicate with each other by service name (e.g. elasticsearch, gdelt-backend). Docker resolves service names to IPs automatically within its internal network.
+
+## Stage 2 — Kubernetes Manifests
+
+**What We Did**
+
+Wrote Kubernetes manifests for all four services and deployed them to minikube.
+
+**Elasticsearch**
+- `StatefulSet` instead of Deployment — because data must survive pod restarts
+- `PersistentVolumeClaim` (150Gi) — reserves disk storage separately from the pod
+- `Service` (ClusterIP) — accessible only inside the cluster by name
+
+**Pipeline**
+- `Deployment` only — no Service needed, pipeline only writes to Elasticsearch, nothing calls it
+
+**Backend**
+- `Deployment` + `Service` (ClusterIP) — accessible inside cluster by other pods
+
+**Frontend**
+- `Deployment` + `Service` (ClusterIP) + `Ingress`
+- Ingress routes: `/api/*` → backend, `/*` → frontend
+- Added `gdelt.local` to Windows hosts file to resolve the domain locally
+
+**Result:** All pods Running, dashboard accessible at `http://gdelt.local`
