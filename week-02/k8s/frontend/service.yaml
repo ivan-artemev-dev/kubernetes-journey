@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gdelt-frontend
+  namespace: gdelt
+spec:
+  selector:
+    app: gdelt-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: ClusterIP

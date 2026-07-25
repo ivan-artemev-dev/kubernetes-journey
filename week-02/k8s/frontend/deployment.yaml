@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gdelt-frontend
+  namespace: gdelt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gdelt-frontend
+  template:
+    metadata:
+      labels:
+        app: gdelt-frontend
+    spec:
+      containers:
+        - name: gdelt-frontend
+          image: localhost:5000/gdelt-frontend:v1.0
+          ports:
+            - containerPort: 80

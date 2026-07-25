@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gdelt-ingress
+  namespace: gdelt
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: gdelt.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: gdelt-backend
+                port:
+                  number: 8099
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: gdelt-frontend
+                port:
+                  number: 80
