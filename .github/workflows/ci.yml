@@ -23,20 +23,20 @@ jobs:
       - name: Build and push parse_gdelt
         uses: docker/build-push-action@v5
         with:
-          context: ./parse_gdelt
+          context: ./week-02/parse_gdelt
           push: true
           tags: ghcr.io/${{ github.actor }}/parse_gdelt:latest
 
       - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
-          context: ./backend
+          context: ./week-02/gdelt_dashboard/backend
           push: true
           tags: ghcr.io/${{ github.actor }}/backend:latest
 
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ./week-02/gdelt_dashboard/frontend
           push: true
           tags: ghcr.io/${{ github.actor }}/frontend:latest
