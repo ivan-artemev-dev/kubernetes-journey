@@ -38,7 +38,7 @@ Currently running in **Kubernetes (minikube)** with all services containerized. 
 - [x] Ingress with routing rules
 - [x] Dashboard running at gdelt.local
 
-### Stage 3 — CI/CD (next)
+### Stage 3 — CI/CD (next) ✅
 - [x] GitHub Actions pipeline
 - [x] Auto build and push images to registry
 - [x] Auto deploy to Kubernetes on git push
