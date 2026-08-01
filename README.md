@@ -39,9 +39,9 @@ Currently running in **Kubernetes (minikube)** with all services containerized. 
 - [x] Dashboard running at gdelt.local
 
 ### Stage 3 — CI/CD (next)
-- [ ] GitHub Actions pipeline
-- [ ] Auto build and push images to registry
-- [ ] Auto deploy to Kubernetes on git push
+- [x] GitHub Actions pipeline
+- [x] Auto build and push images to registry
+- [x] Auto deploy to Kubernetes on git push
 
 ### Stage 4 — Production Practices
 - [ ] ConfigMaps and Secrets

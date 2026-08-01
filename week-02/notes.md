@@ -100,3 +100,20 @@ Saves runner time and compute resources.
 
 ### Next Step
 Configure minikube to pull images from ghcr.io and deploy via `kubectl apply`.
+
+## Stage 3 — Part 2: CronJob and Image Registry Fix
+
+### What We Did
+- Replaced pipeline Deployment with CronJob (runs every 20 minutes)
+- Fixed all image references from localhost:5000 to ghcr.io
+- Diagnosed CrashLoopBackOff: pipeline completed normally but
+  Kubernetes restarted it thinking it crashed
+
+### Key Concepts
+**CronJob vs Deployment**
+- Deployment — keeps a service running forever (backend, frontend)
+- CronJob — runs a task on schedule, pod completes and exits normally
+
+**CrashLoopBackOff**
+- Not always a real crash — can be a process that exits cleanly
+- Deployment expects pods to run forever; use CronJob for periodic tasks
