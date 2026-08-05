@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: gdelt-backend
-          image: localhost:5000/gdelt-backend:v1.0
+          image: ghcr.io/ivan-artemev-dev/backend:latest
           ports:
             - containerPort: 8099
           env:

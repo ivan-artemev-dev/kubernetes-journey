@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
         - name: gdelt-frontend
-          image: localhost:5000/gdelt-frontend:v1.0
+          image: ghcr.io/ivan-artemev-dev/frontend:latest
           ports:
             - containerPort: 80
