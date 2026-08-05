@@ -20,34 +20,35 @@ The goal is to go through every stage properly — understanding why, not just h
 | `gdelt-dashboard` frontend | React + Vite | Pages: Feed, Search, Entity, Trends, Map, Historical analysis |
 | Storage | Elasticsearch | Main index `gdelt_gkg`, SQLite for reference data |
 
-Currently running on a **single machine without containers**. The journey is to properly migrate this to Kubernetes.
+Currently running in **Kubernetes (minikube)** with all services containerized. The journey continues toward CI/CD and production practices.
 
 ## Learning Path
 
-### Stage 1 — Containerization
-- [ ] Dockerfile for `parse_gdelt`
-- [ ] Dockerfile for `gdelt-dashboard` backend
-- [ ] Dockerfile for `gdelt-dashboard` frontend
-- [ ] docker-compose to run everything locally
-- [ ] Push images to Docker Hub
+### Stage 1 — Containerization ✅
+- [x] Dockerfile for `parse_gdelt`
+- [x] Dockerfile for `gdelt-dashboard` backend
+- [x] Dockerfile for `gdelt-dashboard` frontend
+- [x] docker-compose to run everything locally
+- [x] Push images to local registry (minikube)
 
-### Stage 2 — Kubernetes Locally (minikube)
-- [ ] Install and configure minikube
-- [ ] First Pod manifest
-- [ ] Deployments for each service
-- [ ] Services (ClusterIP, NodePort)
+### Stage 2 — Kubernetes Locally (minikube) ✅
+- [x] Namespace, PVC, StatefulSet for Elasticsearch
+- [x] Deployments for all services
+- [x] Services (ClusterIP)
+- [x] Ingress with routing rules
+- [x] Dashboard running at gdelt.local
 
-### Stage 3 — Configuration & Storage
-- [ ] ConfigMaps for app settings
-- [ ] Secrets for credentials
-- [ ] PersistentVolume for Elasticsearch data
+### Stage 3 — CI/CD (next) ✅
+- [x] GitHub Actions pipeline
+- [x] Auto build and push images to registry
+- [x] Auto deploy to Kubernetes on git push
 
-### Stage 4 — Full Cluster Deployment
-- [ ] All services running in cluster
-- [ ] Ingress controller
-- [ ] Health checks (liveness, readiness probes)
-- [ ] GitHub Actions CI/CD pipeline
-
+### Stage 4 — Production Practices
+- [ ] ConfigMaps and Secrets
+- [ ] Liveness and readiness probes
+- [ ] Resource limits and requests
+- [ ] Helm chart
+      
 ## Repository Structure
 
 ```
@@ -64,10 +65,10 @@ kubernetes-journey/
 ```
 
 ## Progress Log
-
 | Week | Topic | Status |
 |---|---|---|
-| Week 1 | Core concepts, first manifests | 🔄 In progress |
+| Week 1 | Core concepts, first manifests | ✅ Done |
+| Week 2 | Docker, docker-compose, Kubernetes manifests | ✅ Done |
 
 ## Stack & Tools
 
