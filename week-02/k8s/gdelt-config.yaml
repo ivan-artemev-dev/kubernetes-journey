@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gdelt-config
+  namespace: gdelt
+data:
+  ELASTIC_URL: "http://elasticsearch:9200"
+  ELASTIC_INDEX: "gdelt_gkg"
+  BACKEND_HOST: "0.0.0.0"
+  BACKEND_PORT: "8099"
