@@ -23,7 +23,7 @@ spec:
                 name: gdelt-config
           livenessProbe:
             httpGet:
-              path: /
+              path: /api/health
               port: 8099
             initialDelaySeconds: 10
             periodSeconds: 15
@@ -31,7 +31,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /
+              path: /api/health
               port: 8099
             initialDelaySeconds: 5
             periodSeconds: 10
