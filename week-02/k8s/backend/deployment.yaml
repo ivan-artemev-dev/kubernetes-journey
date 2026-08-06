@@ -28,6 +28,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: gdelt-config
+            - secretRef:
+                name: gdelt-api-secret
           livenessProbe:
             httpGet:
               path: /api/health
