@@ -18,6 +18,13 @@ spec:
           image: ghcr.io/ivan-artemev-dev/backend:latest
           ports:
             - containerPort: 8099
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "150Mi"
+            limits:
+              cpu: "300m"
+              memory: "300Mi"
           envFrom:
             - configMapRef:
                 name: gdelt-config

@@ -16,6 +16,13 @@ spec:
       containers:
         - name: gdelt-frontend
           image: ghcr.io/ivan-artemev-dev/frontend:latest
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
           ports:
             - containerPort: 80
           livenessProbe:

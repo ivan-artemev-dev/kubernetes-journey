@@ -12,6 +12,13 @@ spec:
           containers:
             - name: gdelt-pipeline
               image: ghcr.io/ivan-artemev-dev/parse_gdelt:latest
+              resources:
+                requests:
+                  cpu: "200m"
+                  memory: "256Mi"
+                limits:
+                  cpu: "500m"
+                  memory: "512Mi"
               envFrom:
                 - configMapRef:
                     name: gdelt-config
