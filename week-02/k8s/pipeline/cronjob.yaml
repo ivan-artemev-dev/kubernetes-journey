@@ -12,7 +12,7 @@ spec:
           containers:
             - name: gdelt-pipeline
               image: ghcr.io/ivan-artemev-dev/parse_gdelt:latest
-              env:
-                - name: ES_HOST
-                  value: http://elasticsearch:9200
+              envFrom:
+                - configMapRef:
+                    name: gdelt-config
           restartPolicy: OnFailure
