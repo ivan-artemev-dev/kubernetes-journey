@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: gdelt-pipeline
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: "*/20 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: gdelt-pipeline
+              image: "{{ .Values.pipeline.image }}:{{ .Values.pipeline.tag }}"
+              resources:
+                requests:
+                  cpu: {{ .Values.pipeline.resources.requests.cpu | quote }}
+                  memory: {{ .Values.pipeline.resources.requests.memory | quote }}
+                limits:
+                  cpu: {{ .Values.pipeline.resources.limits.cpu | quote }}
+                  memory: {{ .Values.pipeline.resources.limits.memory | quote }}
+              envFrom:
+                - configMapRef:
+                    name: gdelt-config
+          restartPolicy: OnFailure

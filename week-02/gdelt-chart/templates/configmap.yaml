@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gdelt-config
+  namespace: {{ .Release.Namespace }}
+data:
+  ELASTIC_URL: {{ .Values.elasticsearch.url | quote }}
+  ELASTIC_INDEX: {{ .Values.elasticsearch.index | quote }}
+  BACKEND_HOST: {{ .Values.backend.host | quote }}
+  BACKEND_PORT: {{ .Values.backend.port | quote }}

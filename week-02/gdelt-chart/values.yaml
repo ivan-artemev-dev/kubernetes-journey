@@ -1,0 +1,51 @@
+backend:
+  image: ghcr.io/ivan-artemev-dev/backend
+  tag: latest
+  replicas: 1
+  port: 8099
+  host: "0.0.0.0"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "150Mi"
+    limits:
+      cpu: "300m"
+      memory: "300Mi"
+
+frontend:
+  image: ghcr.io/ivan-artemev-dev/frontend
+  tag: latest
+  replicas: 1
+  port: 80
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "32Mi"
+    limits:
+      cpu: "100m"
+      memory: "64Mi"
+
+pipeline:
+  image: ghcr.io/ivan-artemev-dev/parse_gdelt
+  tag: latest
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+elasticsearch:
+  image: elasticsearch
+  tag: "8.13.0"
+  url: "http://elasticsearch:9200"
+  index: "gdelt_gkg"
+  javaOpts: "-Xms512m -Xmx512m"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "1100Mi"
+    limits:
+      cpu: "500m"
+      memory: "1400Mi"

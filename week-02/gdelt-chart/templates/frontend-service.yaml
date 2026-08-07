@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gdelt-frontend
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app: gdelt-frontend
+  ports:
+    - port: {{ .Values.frontend.port }}
+      targetPort: {{ .Values.frontend.port }}
+  type: ClusterIP
