@@ -3,8 +3,6 @@ kind: Ingress
 metadata:
   name: gdelt-ingress
   namespace: {{ .Release.Namespace }}
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
     - host: gdelt.local
