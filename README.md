@@ -20,7 +20,7 @@ The goal is to go through every stage properly — understanding why, not just h
 | `gdelt-dashboard` frontend | React + Vite | Pages: Feed, Search, Entity, Trends, Map, Historical analysis |
 | Storage | Elasticsearch | Main index `gdelt_gkg`, SQLite for reference data |
 
-Currently running in **Kubernetes (minikube)** with all services containerized. The journey continues toward CI/CD and production practices.
+Currently running in **Kubernetes (minikube)**, deployed via a **Helm chart**, with ConfigMaps, Secrets, health probes and resource limits configured. All four stages of the initial roadmap are complete.
 
 ## Learning Path
 
@@ -43,32 +43,33 @@ Currently running in **Kubernetes (minikube)** with all services containerized. 
 - [x] Auto build and push images to registry
 - [x] Auto deploy to Kubernetes on git push
 
-### Stage 4 — Production Practices
-- [ ] ConfigMaps and Secrets
-- [ ] Liveness and readiness probes
-- [ ] Resource limits and requests
-- [ ] Helm chart
+### Stage 4 — Production Practices ✅
+- [x] ConfigMaps and Secrets
+- [x] Liveness and readiness probes
+- [x] Resource limits and requests
+- [x] Helm chart
       
 ## Repository Structure
 
 ```
 kubernetes-journey/
 ├── week-01/
-│   ├── notes.md        # Theory: core concepts
-│   └── manifests/      # First yaml files
+│   ├── notes.md
+│   └── manifests/
 ├── week-02/
-│   └── ...
-├── project/
-│   ├── docker/         # Dockerfiles
-│   └── k8s/            # Kubernetes manifests
-└── resources.md        # Useful links and references
+│   ├── notes.md
+│   ├── k8s/             # raw manifests (Stage 2-4, kept for history)
+│   └── gdelt-chart/     # Helm chart (current deployment method)
+├── .github/workflows/
+│   └── ci.yml
+└── resources.md
 ```
 
 ## Progress Log
 | Week | Topic | Status |
 |---|---|---|
 | Week 1 | Core concepts, first manifests | ✅ Done |
-| Week 2 | Docker, docker-compose, Kubernetes manifests | ✅ Done |
+| Week 2 | Docker, Kubernetes, CI/CD, Production Practices, Helm | ✅ Done |
 
 ## Stack & Tools
 

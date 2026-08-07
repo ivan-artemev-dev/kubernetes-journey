@@ -117,3 +117,60 @@ Configure minikube to pull images from ghcr.io and deploy via `kubectl apply`.
 **CrashLoopBackOff**
 - Not always a real crash — can be a process that exits cleanly
 - Deployment expects pods to run forever; use CronJob for periodic tasks
+
+## Stage 4 — Production Practices
+
+### What We Did
+
+- Added `ConfigMap` for shared, non-sensitive config (`ELASTIC_URL`, `ELASTIC_INDEX`, `BACKEND_HOST`, `BACKEND_PORT`) — one ConfigMap shared between backend and pipeline, since both talk to the same Elasticsearch
+- Added `livenessProbe` and `readinessProbe` to backend (`/api/health`) and frontend (`/`) — CronJob (pipeline) intentionally skipped, probes don't apply to run-once tasks
+- Added `resources.requests`/`resources.limits` to all four services, based on real usage measured via `kubectl top pods`
+- Reduced Elasticsearch JVM heap from `-Xms1g -Xmx1g` to `-Xms512m -Xmx512m` to fit the dev machine's limited RAM (5.7Gi total, was hitting 100% swap usage)
+- Created a `Secret` (`gdelt-api-secret`) as a learning exercise — a placeholder `EXTERNAL_API_KEY`, since the project has no real secret yet (Elasticsearch runs without auth)
+- Wrapped the whole stack into a **Helm chart** (`week-02/gdelt-chart`) — converted all four raw manifests into parameterized templates
+
+### Key Concepts
+
+**ConfigMap vs Secret**
+Same mechanism (key-value pairs), different intent. Secret values are base64-encoded, not encrypted — real protection comes from RBAC, not the encoding itself.
+
+**env vs volume mount for ConfigMap**
+`envFrom` — simple, but requires a pod restart to pick up changes (env vars are set once at container start).
+Volume mount — Kubernetes auto-updates the file inside the pod when the ConfigMap changes, no restart needed, but requires the app to support hot-reload from a file. Chose `envFrom` for this project — config here is static enough that a restart on change is an acceptable tradeoff.
+
+**Liveness vs Readiness**
+- Liveness fail → container is **restarted**
+- Readiness fail → pod stays alive, just **pulled out of Service load balancing**
+- Liveness should NOT depend on external dependencies (e.g. Elasticsearch) — otherwise a temporary ES outage would trigger restarts on every backend replica, which doesn't fix anything. Readiness is the right place for that check (left as a simplified version here — both probes currently hit the same `/api/health`, which doesn't check ES; a "proper" setup would need a separate `/api/ready` that pings ES).
+
+**Requests vs Limits**
+- `requests` — guaranteed minimum, used by the scheduler to decide pod placement
+- `limits` — hard ceiling; CPU throttles when exceeded, memory gets the pod `OOMKilled`
+- Real-world practice: don't guess, measure actual usage first (`kubectl top`), then set `requests` ≈ typical usage, `limits` ≈ 1.5-3x that
+
+**QoS Class**
+Computed automatically by Kubernetes from requests/limits, not set directly:
+- `BestEffort` — no requests/limits at all → evicted first under memory pressure
+- `Burstable` — requests set, limits higher (or unset) → medium priority
+- `Guaranteed` — requests == limits for both CPU and memory → evicted last
+
+All four services ended up `Burstable` — enough protection for a single-node dev cluster without over-constraining CPU bursts.
+
+**Helm**
+Package manager for Kubernetes manifests. A **chart** = manifests + `{{ .Values.x }}` placeholders + a `values.yaml` with actual values. Lets the same chart be deployed with different values per environment (`values-dev.yaml`, `values-prod.yaml`), and gives `helm upgrade` / `helm rollback` for free — something plain `kubectl apply` doesn't track.
+
+Decisions made when converting to Helm:
+- **PVC not templated** — `elasticsearch-pvc` already existed with real data; a Helm-managed PVC template would either conflict (same name) or force recreation (data loss). StatefulSet references the existing PVC by name instead.
+- **Secret not templated** — kept as a manually-created object outside the chart (`kubectl create secret`), same reasoning as real companies not committing secrets to git in plaintext. Chart just references it by name via `secretRef`.
+- What got parameterized: image/tag, replicas, ports, resources (things that legitimately differ between environments)
+- What stayed hardcoded in templates: object names, health check paths, probe structure (internal wiring that shouldn't vary — parameterizing it just adds risk of mismatch between files)
+
+### Migration Notes
+
+Moved from raw `kubectl apply -f ...` manifests (`week-02/k8s/`) to `helm install gdelt week-02/gdelt-chart -n gdelt`. Old manifests kept in the repo for history, no longer applied directly.
+
+Hit one real issue during migration: deleted `gdelt-api-secret` manually before running `helm install` (since it's not part of the chart) — backend came up as `CreateContainerConfigError` until the secret was recreated. Good practical reminder that "not managed by Helm" also means "not recreated by Helm."
+
+### Next Step
+
+Decide: deepen this project further (HPA, RBAC, NetworkPolicy, multi-container pods) or move to a second, more complex project to cover concepts that don't naturally fit here (multi-node clustering, service mesh, etc).
