@@ -8,6 +8,16 @@ spec:
   selector:
     matchLabels:
       app: elasticsearch
+  volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: {{ .Values.elasticsearch.storage }}
+        storageClassName: {{ .Values.elasticsearch.storageClassName }}
   template:
     metadata:
       labels:
@@ -35,7 +45,3 @@ spec:
           volumeMounts:
             - name: elasticsearch-data
               mountPath: /usr/share/elasticsearch/data
-      volumes:
-        - name: elasticsearch-data
-          persistentVolumeClaim:
-            claimName: elasticsearch-pvc

@@ -49,3 +49,5 @@ elasticsearch:
     limits:
       cpu: "500m"
       memory: "1400Mi"
+  storage: 2Gi
+  storageClassName: standard
