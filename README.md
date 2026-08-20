@@ -20,7 +20,7 @@ The goal is to go through every stage properly — understanding why, not just h
 | `gdelt-dashboard` frontend | React + Vite | Pages: Feed, Search, Entity, Trends, Map, Historical analysis |
 | Storage | Elasticsearch | Main index `gdelt_gkg`, SQLite for reference data |
 
-Currently running in **Kubernetes (minikube)**, deployed via a **Helm chart**, with ConfigMaps, Secrets, health probes and resource limits configured. All four stages of the initial roadmap are complete.
+Currently running in **production on GKE** (Google Kubernetes Engine), deployed via the same **Helm chart** used for local minikube development (`values.yaml` + `values-gke.yaml` environment overlay). Previously ran on minikube during initial development — all four stages of the initial roadmap plus a GKE migration are complete.
 
 ## Learning Path
 
@@ -48,6 +48,12 @@ Currently running in **Kubernetes (minikube)**, deployed via a **Helm chart**, w
 - [x] Liveness and readiness probes
 - [x] Resource limits and requests
 - [x] Helm chart
+
+### Stage 5 — GKE Migration ✅
+- [x] Real Persistent Disk storage via `volumeClaimTemplates`
+- [x] LoadBalancer + Ingress (GKE's built-in GCE Ingress Controller)
+- [ ] Multi-node specifics (nodeSelector/affinity)
+- [ ] IAM/RBAC
       
 ## Repository Structure
 
@@ -70,6 +76,7 @@ kubernetes-journey/
 |---|---|---|
 | Week 1 | Core concepts, first manifests | ✅ Done |
 | Week 2 | Docker, Kubernetes, CI/CD, Production Practices, Helm | ✅ Done |
+| Week 2+ | GKE migration — Storage (PVC/StatefulSet), LoadBalancer/Ingress | ✅ Done |
 
 ## Stack & Tools
 

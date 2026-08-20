@@ -173,4 +173,48 @@ Hit one real issue during migration: deleted `gdelt-api-secret` manually before 
 
 ### Next Step
 
-Decide: deepen this project further (HPA, RBAC, NetworkPolicy, multi-container pods) or move to a second, more complex project to cover concepts that don't naturally fit here (multi-node clustering, service mesh, etc).
+## Stage 5 — GKE Migration
+
+### What We Did
+
+- Created a GKE cluster (`gdelt-cluster`, europe-west1-b), initially 2× `e2-small` nodes
+- Learned the difference between minikube "nodes" (a single local VM, all resources shared) and real GKE nodes (separate Compute Engine VMs, each with its own Capacity/Allocatable split)
+- Checked `kubectl describe node` — Allocatable was noticeably lower than Capacity (~660Mi lost per node to system reserves: kubelet, container runtime, kube-proxy)
+- Resized the node pool: deleted `default-pool` (e2-small), created `medium-pool` (e2-medium, 2 nodes) — doubled allocatable memory (~2.7Gi/node) to match roughly what the stack used on minikube (~4Gi total)
+- Split `values.yaml` (base/minikube) from a new `values-gke.yaml` (GKE overrides only) — Helm merges both with `-f values.yaml -f values-gke.yaml`
+- Converted Elasticsearch storage from a manually-created PVC (`elasticsearch-pvc`, referenced by name) to `volumeClaimTemplates` on the StatefulSet — required because a real cloud disk (GCE Persistent Disk via `standard-rwo` StorageClass) needs to be dynamically provisioned per-environment, not hand-created once like on minikube
+- Removed the placeholder `gdelt-api-secret` reference from backend (`envFrom.secretRef`) — it was a learning-only object from Stage 4, never real, and blocked deploy on the new cluster with `CreateContainerConfigError`
+- Installed `ingress-nginx` via Helm to practice running a self-managed Ingress Controller, then discovered GKE has a **built-in** GCE Ingress Controller that auto-handles any `Ingress` object with no `ingressClassName` set — it had already claimed our `gdelt-ingress` since the very first `helm install`, days earlier, without us noticing
+- Uninstalled `ingress-nginx` — redundant, and it was silently eating CPU budget on the 2-node e2-medium cluster
+- Removed `host: gdelt.local` from `ingress.yaml` to allow direct access via the GCE LoadBalancer's public IP, without editing the local `hosts` file
+
+### Incidents & Fixes
+
+**1. `AccessDeniedException` on Elasticsearch startup (StatefulSet + real PD)**
+Elasticsearch failed to obtain a node lock on `/usr/share/elasticsearch/data` — `CrashLoopBackOff`. Root cause: a freshly provisioned GCE Persistent Disk's filesystem root is owned by `root:root` by default; the ES container runs as an unprivileged user (UID 1000). Fixed with `securityContext.fsGroup: 1000` on the pod spec — this never showed up on minikube because its storage backend (hostPath-based) doesn't enforce the same ownership rules as a real block device.
+
+**2. CronJob pods stuck in `Pending` — `Insufficient cpu`**
+While debugging Ingress, `ingress-nginx-controller`'s pods quietly consumed enough CPU headroom that new `gdelt-pipeline` Job pods (`requests.cpu: 200m`) couldn't be scheduled on either e2-medium node. Dozens of Job pods piled up in `Pending` over ~4 days of the CronJob firing every 20 minutes with nothing being cleaned up automatically (Kubernetes' `successfulJobsHistoryLimit`/`failedJobsHistoryLimit` only prune `Completed`/`Failed` jobs — a `Pending` job is neither, so it just accumulates). Resolved by removing `ingress-nginx` and clearing the stuck Job backlog with `kubectl delete jobs --field-selector status.successful=0`.
+
+**3. `BadRequestError: Fielddata is disabled on [date]` — `/api/feed` returning 500**
+A fresh Elasticsearch instance on a brand-new PD had no index yet. The pipeline's first CronJob run auto-created `gdelt_gkg` with Elasticsearch's dynamic mapping, which guessed `date` as `text` instead of `date`/`keyword` — sorting by a `text` field is disabled by default. The project already had an explicit mapping script (`02_create_index.py`, mapping `date` correctly), but it's a manual one-off step, not run automatically by the CronJob — it had only ever been run once, manually, on minikube, long before this migration. Fixed by port-forwarding to the GKE Elasticsearch Service and re-running the script manually against it, then re-triggering the pipeline with `kubectl create job --from=cronjob/gdelt-pipeline`.
+
+### Key Concepts
+
+**Node Capacity vs Allocatable**
+On managed cloud Kubernetes, a node's full Capacity is never fully schedulable — kubelet, the container runtime, and system DaemonSets reserve a slice. Always check Allocatable, not Capacity, when capacity-planning.
+
+**`volumeClaimTemplates` vs a manually-referenced PVC**
+A manually-created PVC (`claimName: ...` in `spec.volumes`) is a single, static, pre-existing object — fine for a one-off dev disk, but doesn't generalize across replicas or environments. `volumeClaimTemplates` on the StatefulSet is a *template*: Kubernetes generates one PVC per replica automatically (`<template-name>-<statefulset-name>-<ordinal>`), each backed by its own independent disk — required once you're relying on a real StorageClass to dynamically provision storage per environment (`values-gke.yaml` sets a different `storageClassName`/`storageSize` than `values.yaml`, no template changes needed).
+
+**GKE has a built-in Ingress Controller**
+Unlike a bare-metal/minikube setup, GKE automatically runs a GCE-backed Ingress Controller with no installation step — any `Ingress` object with no explicit `ingressClassName` gets picked up by it by default. Installing `ingress-nginx` on top doesn't replace this; both can coexist, but only one actually serves traffic for a given Ingress object unless `ingressClassName` explicitly says otherwise.
+
+**`Pending` Jobs don't self-heal on a schedule, they just queue**
+A `CronJob` keeps firing on schedule regardless of whether previous Job pods ever got scheduled. If cluster resources are tight, `Pending` pods pile up silently — they're not covered by the history-limit cleanup that applies to finished jobs. Worth actively monitoring resource headroom before running anything CPU-heavy alongside a live CronJob.
+
+**Dynamic mapping is a one-time trap on a fresh index**
+Elasticsearch infers field types from the first document it sees, if no explicit mapping exists yet. A correct mapping script sitting unused in the repo doesn't protect a fresh cluster — it has to actually be re-run against every new Elasticsearch instance, before the first write.
+
+### Next Step
+Multi-node specifics (nodeSelector/affinity, StatefulSet pod behavior across nodes) → then IAM/RBAC tied to Google Cloud IAM.
