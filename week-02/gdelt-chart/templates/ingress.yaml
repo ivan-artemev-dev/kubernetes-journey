@@ -5,8 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   rules:
-    - host: gdelt.local
-      http:
+    - http:
         paths:
           - path: /api
             pathType: Prefix
