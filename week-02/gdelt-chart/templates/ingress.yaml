@@ -5,20 +5,19 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   rules:
-    - host: gdelt.local
-      http:
-        paths:
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: gdelt-backend
-                port:
-                  number: {{ .Values.backend.port }}
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: gdelt-frontend
-                port:
-                  number: {{ .Values.frontend.port }}
+   -  http:
+      paths:
+        - path: /api
+          pathType: Prefix
+          backend:
+            service:
+              name: gdelt-backend
+              port:
+                number: {{ .Values.backend.port }}
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: gdelt-frontend
+              port:
+                number: {{ .Values.frontend.port }}
